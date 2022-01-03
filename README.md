@@ -6,19 +6,22 @@ Implémentation à partir de zéros d'une version simple du concept MapReduce av
 
 Plusieurs ordinateurs d’une salle de TP des locaux de Télécom Paris connectés en réseaux afin de paralléliser le comptage des mots contenu au sein d’un fichier texte. 
 
-L’objectif recherché avec l’augmentation du volume de données n’est plus de centralisé les données sur une seule machine mais plutôt de distribuer le stockage et paralléliser les traitements sur plusieurs machines. Le fait de regrouper les ordinateurs entre eux créer un effet de synergie c’est-à-dire que la puissance combinée de plusieurs petits ordinateurs et supérieur à la puissance d’un gros serveur central. 
+L’objectif recherché avec l’augmentation du volume de données n’est plus de centraliser les données sur une seule machine mais plutôt de distribuer le stockage et paralléliser les traitements sur plusieurs machines. Le fait de regrouper les ordinateurs entre eux crée un effet de synergie c’est-à-dire que la puissance combinée de plusieurs petits ordinateurs est supérieure à la puissance d’un gros serveur central. 
+Les avantages du calcul distribué sont les suivants : 
 
-Les **avantages **du calcul distribué sont les suivants : 
+Les avantages du calcul distribué sont les suivants : 
 
-* Scalabilité horizontale : Pour augmenter les performances et la capacité de stockage d’un cluster (groupement de plusieurs machines), il suffit de rajouter un ordinateur au cluster cela permet donc d’ajouter très facilement un nouveau nœud au cluster. 
+* Scalabilité horizontale : Pour augmenter les performances et la capacité de stockage d’un cluster (groupement de plusieurs machines), il suffit de rajouter un ordinateur au cluster qui permet donc d’ajouter très facilement un nouveau nœud au cluster. 
 
-* Tolérance aux pannes : Pour être résilient face aux pannes (ex : pannes de nœuds très fréquents = machine qui tombe en panne, problème de connectivité entre les nœuds ou les casiers et le réseau), les données sont dupliquées sur plusieurs machines (3 fois par défaut). Dans Hadoop c’est HDFS qui permet d’être tolérant face aux pannes.  
+* Tolérance aux pannes : Pour être résilient face aux pannes (ex : pannes de nœuds très fréquents = machine qui tombe en panne, problème de connectivité entre les nœuds ou les casiers et le réseau), les données sont dupliquées sur plusieurs machines (3 fois par défaut). Dans Hadoop HDFS qui permet d’être tolérant face aux pannes.   
 
-* Les goulots d’étranglement : Dans une architecture client/serveur où l’ensemble des données sont stockées sur un serveur central, les opérations de transfert de données qui se dirigent vers le serveur central engendrent un goulot d’étranglement. Dans une architecture distribuée, la charge de travail est répartie entre les différentes machines du cluster donc on ne retrouve pas ce problème de goulot d’étranglement.
+* Les goulots d’étranglement : Dans une architecture client/serveur où l’ensemble des données est stocké sur un serveur central, les opérations de transfert de données qui se dirigent vers le serveur central engendrent un goulot d’étranglement. Dans une architecture distribuée, la charge de travail est répartie entre les différentes machines du cluster dans lesquelles nous ne retrouvons pas ce problème de goulot d’étranglement.
 
 ## Présentation de MapReduce
 
-La première motivation de l’introduction de MapReduce concerne le traitement des tâches dit « embarrassingly parallel ». Cela est un abus de langage car contrairement à ce que l’on pourrait croire,  « embarrassingly parallel » ne peut pas dire « embarrassant à paralléliser » mais plutôt « parallélisable à l’excès». Ainsi, MapReduce, n’a pas été conçu dans le but de paralléliser des tâches difficiles à paralléliser mais plutôt pour des tâches facilement parallélisable. En effet, MapReduce pourra fonctionner seulement sur une tâche qui peut se découper en plusieurs sous tâches indépendantes. Cela peut être perçu comme une limite de MapReduce mais il s’avère que dans le domaine de l’analyse de données, la majorité des applications de traitement de données, les données ont une structure régulière offrant ainsi l’avantage d’exploiter la puissance du parallèle. 
+La première motivation de l’introduction de MapReduce concerne le traitement des tâches dit « embarrassingly parallel ». Cela est un abus de langage car contrairement à ce que l’on pourrait croire,  « embarrassingly parallel » ne veut pas dire « embarrassant à paralléliser » mais plutôt « parallélisable à l’excès». Ainsi, MapReduce, n’a pas été conçu dans le but de paralléliser des tâches difficiles à paralléliser mais plutôt pour des tâches facilement parallélisables. En effet, MapReduce pourra fonctionner seulement sur une tâche qui peut se découper en plusieurs sous-tâches indépendantes. Cela peut être perçu comme une limite de MapReduce mais il s’avère que dans le domaine de l’analyse de données, pour la majorité des applications de traitement de données, les données ont une structure régulière offrant ainsi l’avantage d’exploiter la puissance du parallèle. 
+Par ailleurs, MapReduce est un modèle algorithmique qui permet de penser le découpage d’un problème parrallélisable en plusieurs sous tâches indépendantes en suivant 4 phases. 
+Pour expliquer le fonctionnement de ces phases, nous nous plaçons dans le contexte du comptage des mots d’un fichier texte.
 
 ## Implémentation d'une version simple de MapReduce
 
@@ -45,9 +48,10 @@ Compter les mots du fichier texte input.txt en tirant profit de la puissance de 
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Architecture_Repartis.png)
 
-Les modèles de communication déterminent le ou les responsables lorsqu’une requête est adressé au cluster. Deux machines arrivent à s’échanger des informations grâce à un protocole de communication qui est un ensemble de spécifications qui permettent à deux ordinateurs de communiquer. Le modèle de communication utilisé ici suit le paradigme Maître-Esclave. A travers ce type d’architecture, les requêtes adressées au cluster (groupement des machines) sont réparties entre chaque machine esclave par une machine maître. La gestion entière du cluster est adressée à la machine maître qui connait la répartition exacte des données sur chaque machine. La communication est donc bidirectionnelle et peut être facilement chainée sur le réseau sans créer de goulot d’étranglement. De plus la centralisation rendu possible grâce à la machine maître facilite l’administration du cluster. 
+Les modèles de communication déterminent le ou les responsables lorsqu’une requête est adressée au cluster. Deux machines arrivent à s’échanger des informations grâce à un protocole de communication qui est un ensemble de spécifications qui permettent à deux ordinateurs de communiquer. Le modèle de communication utilisé ici suit le paradigme Maître-Esclave. A travers ce type d’architecture, les requêtes adressées au cluster (groupement des machines) sont réparties entre chaque machine esclave par une machine maître. La gestion entière du cluster est adressée à la machine maître qui connait la répartition exacte des données sur chaque machine. La communication est donc bidirectionnelle et peut être facilement chainée sur le réseau sans créer de goulot d’étranglement. De plus la centralisation rendue possible grâce à la machine maître facilite l’administration du cluster. 
 
 De plus, le mode de partage des ressources dans l’architecture distribuée que j’ai mise en place au sein du cluster est celui du « shared nothing ». En effet, aucune ressource n’est partagée entre chacune des machines du cluster via le réseau LAN. En effet, les machines esclaves ne partagent ni la mémoire ni le disque dur. Chaque machine esclave utilise ses propres ressources.
+
 
 ### Execution d'une commande bash avec python sur une machines distante
 
@@ -109,10 +113,10 @@ De plus, le mode de partage des ressources dans l’architecture distribuée que
 ### Phase de File Splitting
 
 1. Nettoyage du fichier : Suppression des lignes vides du fichier texte avec la fonction python `strip()`
-2. Calcul du nombre de répartition des lignes pour chaque partition : Le nombre total des lignes du fichier d’entrée est divisé (division entière) par le nombre de machine. De cette façon on obtient un nombre de ligne identique pour chaque partition. Mais il se peut qu’il reste encore des lignes du texte qui ne sont pas pris en compte car nous effectuons une division entière. 
+2. 2.	Calcul du nombre de répartition des lignes pour chaque partition : Le nombre total des lignes du fichier d’entrée est divisé (division entière) par le nombre de machine. De cette façon on obtient un nombre de lignes identiques pour chaque partition. Mais il se peut qu’il reste encore des lignes du texte qui ne sont pas prises en compte car nous effectuons une division entière. 
 `split_line = nb_line // nb_machine`
  
-3. Le nombre de ligne restant est calculé avec le modulo du nombre de machine
+3. Le nombre de lignes restant est calculé avec le modulo du nombre de machine
 `remaining_line = nb_line % nb_machine`
 
 4.	Création des intervalles pour sélectionner les N lignes qui seront intégrées dans chaque partition
