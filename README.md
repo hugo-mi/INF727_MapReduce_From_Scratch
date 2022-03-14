@@ -55,7 +55,8 @@ De plus, le mode de partage des ressources dans l’architecture distribuée que
 
 ### Execution d'une commande bash avec python sur une machines distante
 
-`def ssh(command):
+```python
+def ssh(command):
     listproc = []
     timer=5
     login="hmichel-20"
@@ -74,11 +75,12 @@ De plus, le mode de partage des ressources dans l’architecture distribuée que
         except subprocess.TimeoutExpired:
             listproc[i].kill()
             print(str(i)+" timeout")
-`
+```
 
 ### Copie de fichier entre machine distante
 
-`def scp(localPath,distantPath):
+```python
+def scp(localPath,distantPath):
     listproc = []
     timer=5
     login="hmichel-20"
@@ -97,7 +99,7 @@ De plus, le mode de partage des ressources dans l’architecture distribuée que
         except subprocess.TimeoutExpired:
             listproc[i].kill()
             print(str(i)+" timeout")    
-`
+```
 
 ### Phase de démarrage (Initialisation de l'environnement sur les 3 machines)
 
@@ -113,36 +115,45 @@ De plus, le mode de partage des ressources dans l’architecture distribuée que
 ### Phase de File Splitting
 
 1. Nettoyage du fichier : Suppression des lignes vides du fichier texte avec la fonction python `strip()`
-2. 2.	Calcul du nombre de répartition des lignes pour chaque partition : Le nombre total des lignes du fichier d’entrée est divisé (division entière) par le nombre de machine. De cette façon on obtient un nombre de lignes identiques pour chaque partition. Mais il se peut qu’il reste encore des lignes du texte qui ne sont pas prises en compte car nous effectuons une division entière. 
-`split_line = nb_line // nb_machine`
+2. Calcul du nombre de répartition des lignes pour chaque partition : Le nombre total des lignes du fichier d’entrée est divisé (division entière) par le nombre de machine. De cette façon on obtient un nombre de lignes identiques pour chaque partition. Mais il se peut qu’il reste encore des lignes du texte qui ne sont pas prises en compte car nous effectuons une division entière. 
+```python 
+split_line = nb_line // nb_machine
+```
  
 3. Le nombre de lignes restant est calculé avec le modulo du nombre de machine
-`remaining_line = nb_line % nb_machine`
+```python 
+remaining_line = nb_line % nb_machine
+```
 
 4.	Création des intervalles pour sélectionner les N lignes qui seront intégrées dans chaque partition
 
-`int1 = split_line
+```python
+int1 = split_line
 int2 = 2 * split_line
 int3 = 3 * split_line
 …
-int30 = 30*(split_line) + remaining_line`
+int30 = 30*(split_line) + remaining_line
+```
 
 En généralisant ça donne : 
-_**int(i) = i * split_line et int_last(i) = i*(split_line) + remaining_line**_
+```int(i) = i * split_line et int_last(i) = i*(split_line) + remaining_line```
 
 5.	Enfin il convient à l’aide des différents intervalles calculés à l’étape 3 de créer les dataframes dont chacune des lignes du dataframe contiendra une ligne de la partition de texte. 
+``` python
 df1 = df[0:int1]
 df2 = df[int1:int2]
 df3 = df[int2:int3]
 …
 df30 = df[int29:int30]
+```
 
 En généralisant cela donne 
-**_df(i) = df[int(i-1) :int(i)]_**
+```df(i) = df[int(i-1) :int(i)]```
 
 **Split function**
 
-`def split_input_file():
+``` python
+def split_input_file():
     df = pd.read_csv('/tmp/hmichel-20/input.txt', sep="\n", header=None)
     nb_line = df.shape[0]
     
@@ -162,7 +173,7 @@ En généralisant cela donne
     df1.to_csv(r'/tmp/hmichel-20/splits/s10.txt', header=None, index=None, sep='\n', mode='w')
     df2.to_csv(r'/tmp/hmichel-20/splits/s11.txt', header=None, index=None, sep='\n', mode='w')
     df3.to_csv(r'/tmp/hmichel-20/splits/s13.txt', header=None, index=None, sep='\n', mode='w')
-`
+```
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Deploy.png)
 
@@ -174,22 +185,25 @@ En généralisant cela donne
 
 **Calcul du hash pour chaque paire de mots**
 
-`word_encoded = word.encode('utf-8')
+``` python
+word_encoded = word.encode('utf-8')
  hashcode = str(int.from_bytes(hashlib.sha256(word_encoded).digest()[:2], 'little'))
- filename_shuffled = "/tmp/hmichel-20/shuffles/" + hashcode + "-" + socket.gethostname() + ".txt"`
+ filename_shuffled = "/tmp/hmichel-20/shuffles/" + hashcode + "-" + socket.gethostname() + ".txt"
+ ```
 
 **Répartition des paires clé/valeur sur chaque machine**
 
-`    nb_machines = 3
-    hashcode = hashcode
-    num_machine = hashcode % nb_machines
-    if num_machine == 0:
-        id_machine = 10
+``` python
+nb_machines = 3
+hashcode = hashcode
+num_machine = hashcode % nb_machines
+if num_machine == 0:
+    id_machine = 10
     elif num_machine == 1:
         id_machine = 11
     elif num_machine == 2:
         id_machine = 13
-`
+```
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/slave_shuffler.png)
 
@@ -203,7 +217,7 @@ En généralisant cela donne
 
 ### Performance avec 3 machines
 
-**Fichier texte "deontologie_police_nationale.txt" (8 ko)**
+**Fichier texte ```deontologie_police_nationale.txt``` (8 ko)**
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Output_Basic2.png)
 
@@ -211,7 +225,7 @@ En généralisant cela donne
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Output_Basic2_.png)
 
-**Fichier texte "domaine_public_fluvial.txt" de 71 ko**
+**Fichier texte ```domaine_public_fluvial.txt``` (71 ko)**
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Output_Basic3_.png)
 
@@ -222,11 +236,11 @@ En généralisant cela donne
 
 ### Performance avec 30 machines
 
-**Fichier texte "deontologie_police_nationale.txt" (8 ko)**
+**Fichier texte ```deontologie_police_nationale.txt``` (8 ko)**
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Output_30.png)
 
-**Fichier texte "domaine_public_fluvial.txt" de 71 ko**
+**Fichier texte ```domaine_public_fluvial.txt``` (71 ko)**
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Output_30_.png)
 
@@ -248,10 +262,10 @@ Limitation des transferts de fichiers entre les machines esclaves durant la phas
 
 ### Performance de la version améliorée avec 30 machines
 
-**Fichier texte "deontologie_police_nationale.txt" (8 ko)**
+**Fichier texte ```deontologie_police_nationale.txt``` (8 ko)**
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Output_Enhanced.png)
 
-**Fichier texte "domaine_public_fluvial.txt" de 71 ko**
+**Fichier texte ```domaine_public_fluvial.txt``` (71 ko)**
 
 ![](https://github.com/hugo-mi/INF727_MapReduce_From_Scratch/blob/main/Images/Output_Enhanced2.png)
